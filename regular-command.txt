@@ -1,0 +1,87 @@
+****************************to find how many services on server***************************
+
+find /apps/services -mindepth 2 -maxdepth 2 -type d | sed 's|.*/||' 
+
+
+find /apps/services -mindepth 2 -maxdepth 2 -type d | sed 's|/apps/services||'    ----> with its parent directory 
+
+
+find /apps/services -mindepth 2 -maxdepth 2 -type d | sed 's|/apps/services||' | awk -F'/' '
+{
+  parent = $1"/"$2;
+  subdir = $0;
+  if (parent != last_parent) {
+    if (NR > 1) {
+      print "";                             
+    }
+    print parent;
+    last_parent = parent;
+    print subdir;
+  } else {
+    print subdir;
+  }
+}' | sort -u                                    
+
+
+
+
+
+
+*****************to check attached volume size for instances***********************
+
+#!/bin/bash
+
+# Define an associative array with server names and their instance IDs
+declare -A servers=(
+  ["GITLAB-Server"]="i-094add32670167c44"
+  ["GST-JenKins-Server"]="i-00508a44563fff7b8"
+  ["Guacamole-Server"]="i-0769d8c74a1313dfe"
+  ["JenKins-Server"]="i-0ab75c3f3494ad338"
+  ["JFROG_APP_Server"]="i-0d6cd90d4d9706057"
+  ["MongoDB_APP_Server"]="i-01811951e3cd0950b"
+  ["Nginx_SERVER"]="i-09df7e3d23118b2cc"
+  ["Nginx_SERVER_2"]="i-07c5b5f508c692a6a"  # Renamed second Nginx_SERVER to avoid duplicate key
+  ["PNB-UAT-GST-SAHAY-APP-SERVER"]="i-0579049fe0dd588ed"
+  ["PREPROD-BOB-APP-Server"]="i-0f46d31c927065e7b"
+  ["QA-FITSCORE-APP-Server"]="i-0c6f9ce499b081e46"
+  ["OA-OAM"]="i-034010ab5e8ec7a8c"
+  ["QA-GST-SAHAY-APP-SERVER"]="i-0443b0221966a1277"
+  ["QA-OPL-APP-Server"]="i-01d2ea6ab73c739c2"
+  ["QA-PNBHL-APP-Server"]="i-0c88ad76309a476aa"
+  ["QA-PSB-HL-AL-APP-Server"]="i-0ef92d0087f7685aa"
+  ["RabbitMQ-Server"]="i-0a19bba1ae672e03f"
+  ["SIT-GST-SAHAY-APP-Server"]="i-013386b05a5f62b01"
+  ["SIT-HSBC-APP-Server"]="i-0513967a98ee156d9"
+  ["SIT-OAM-APP-Server"]="i-0b0b5b83a9817cc2d"
+  ["SIT-PABL-APP-Server"]="i-06cdf653255dc6746"
+  ["SONARL_APP_SERVER"]="i-0f00091a07cddc10c"
+  ["UAT-FITSCORE-APP-SERVER"]="i-0a31adf4f0822c68c"
+  ["UAT-GST-SAHAY-APP-SERVER"]="i-0db0edd13b5c49592"
+  ["UAT-HSBC-NEW-APP-Server"]="i-0c1d693472a4fd2bd"
+  ["UAT-OAM-APP-Server"]="i-08bfe2726d14b9d9d"
+  ["UAT-OPL-APP-Server"]="i-00aab5105e2bc5d34"
+  ["UAT-PABL-APP-Server"]="i-05725e23687e6cdbd"
+  ["UAT-PNBHL-APP-Server"]="i-03b3fe82490e57011"
+  ["UBI-UAT-GST-SAHAY-APP-SERVER"]="i-0307ef2d74fb22e05"
+  ["Ubuntu-RDP-For-Guacamole"]="i-0326ba09fffeb349e"
+)
+
+# Loop through each server and calculate the total size of attached EBS volumes
+for server in "${!servers[@]}"; do
+  instance_id=${servers[$server]}
+  
+  # Get the volume IDs of attached EBS volumes
+  volume_ids=$(aws ec2 describe-instances --instance-ids $instance_id --query "Reservations[*].Instances[*].BlockDeviceMappings[*].Ebs.VolumeId" --output text)
+  
+  # Initialize sum variable for the current server
+  sum=0
+
+  # Retrieve the size of each volume and add to the sum
+  for volume_id in $volume_ids; do
+    size=$(aws ec2 describe-volumes --volume-ids $volume_id --query "Volumes[*].Size" --output text)
+    sum=$((sum + size))
+  done
+
+  # Display the total sum for the current server
+  echo "Total Size for $server ($instance_id): ${sum} GiB"
+done

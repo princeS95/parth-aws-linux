@@ -1,0 +1,31 @@
+which mockoon-cli
+npm install -g @mockoon/cli
+cd /root/.nvm/versions/node/v20.12.1/lib/node_modules/\@mockoon/cli/
+ll
+cd
+clear
+mockoon --version
+npm install mockoon-cli
+npm config get prefix
+ls $(npm config get prefix)/bin
+vim ~/.bashrc 
+source ~/.bashrc
+npm install -g @mockoon-cli
+npm install -g @mockoon/cli
+sudo ln -s $(npm config get prefix)/bin/mockoon /usr/local/bin/mockoon
+   
+which mocknoon-cli
+which mocknoon
+sudo ln -s $(npm config get prefix)/bin/mocknoon -version
+ls $(npm config get prefix)/bin/mocknoon -version
+ls $(npm config get prefix)/bin/mocknoon 
+ls $(npm config get prefix)/bin/
+ls $(npm config get prefix)/bin/mockoon-cli 
+sudo ln -s $(npm config get prefix)/bin/mockoon-cli /usr/local/bin/mockoon
+rm /usr/local/bin/mockoon 
+sudo ln -s $(npm config get prefix)/bin/mockoon-cli /usr/local/bin/mockoon
+which mocknoon
+which java
+sudo ln -s $(npm config get prefix)/bin/mockoon-cli /bin/mockoon-cli
+mockoon-cli --version
+history 

@@ -1,0 +1,97 @@
+	Creating a .pem with the Entire SSL Certificate Trust Chain	
+------> domain crt + intermediate crt + root crt
+
+
+
+
+
+
+------> Open a text editor (such as wordpad) and paste the entire body of each certificate into one text file in the following order:
+
+	The Primary Certificate - your_domain_name.crt
+	The Intermediate Certificate - DigiCertCA.crt
+	The Root Certificate - TrustedRoot.crt
+
+
++++++++++++++++Generate csr and key++++++++++++
+	openssl genrsa -des3 -out www.your-domain-name.key 2048
+	openssl req -config /etc/pki/tls/openssl.cnf -new -key www.your-domain-name.com.key -out www.your-domain-name.com.csr ----->> for csr
+	openssl x509 -config /etc/pki/tls/openssl.cnf -new -key www.your-domain-name.com.key -out www.your-domain-name.com.crt ----->> for cer
+
+
+
+
+
+
+++++++++++++++++++++++For check md5 (hash key)+++++++++++++
+	openssl rsa -noout -modulus -in instantmseloans.in.nopass.pem | openssl md5   --->> for key
+	openssl req -noout -modulus -in instantmseloans.in.csr | openssl md5         ----->> for csr
+	openssl x509 -noout -modulus -in instantmseloans.in.cer | openssl md5       ------->> for cer
+	openssl rsa -noout -modulus -in instantmseloans.in.key | openssl md5        ------->> for key
+	
+
+
+
+
+++++++++++++++++++++++for add two crt into one++++++++++++++++
+	cat one.crt two.crt >> my.crt 	
+
+
+
+
+
+++++++++++++++++++++Convert pvt key into nopass key-->> for add in nginx file++++++++++++++++++++
+	openssl rsa -in instantmseloans.in.key -out instantmseloans.in.nopass.pem
+	
+	
+	#ssl_certificate /etc/ssl/ssl_2022/instantmseloans.in.crt;
+	#ssl_certificate_key /etc/ssl/ssl_2022/instantmseloans.in.nopass.pem;
+
+
+
+********************************************************************************************************************************************
+++++++++++++Run below command for add the certificate on server (JDK)+++++++++++
+cd /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.312.b07-1.amzn2.0.2.x86_64 
+
+keytool -importcert -trustcacerts -alias instantmseloans-certificate -file "/root/ssl_2022/instantmseloans-in.crt" -keystore  jre/lib/security/cacerts -storepass changeit
+
+keytool -importcert -trustcacerts -alias instantmseloans-bundle -file "/root/ssl_2022/gd_bundle-g2-g1.crt" -keystore  jre/lib/security/cacerts -storepass changeit
+
+update-ca-trust
+
+========================================================
+Delete files from current directory  -  argument too long list 
+find . -name "*.pdf" -print0 | xargs -0 rm
+
+
+
+
+
++++++++++++++++++++++++++++++++++++++++++++Create CSR+++++++++++++++++++
+
+openssl genrsa -des3 -out www. domain-name.key 2048
+openssl req -config /etc/pki/tls/openssl.cnf -new -key www. domain-name.com.key -out www.domain-name.com.csr
+
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Update or Install SSL Certificate on APP Server.
+
+cd /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+
+
+
++++++++++++++++++++++++++++++++++++++++++==Kill Zombie Process+++++++++++++++++++++++++++++++
+ps aux | awk '{if ($8 == "Z") print $2}'
+ps -o ppid= -p 4567
+kill -9 1234
+
+
++++++++++++++make full chain +++++++++++=
+
+cat domain.crt gd_bundle.crt > fullchain.pem
+
+ 

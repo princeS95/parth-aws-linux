@@ -1,0 +1,113 @@
+**********: create user in source account & configure in cli***************
+
+
+
+
+
+*************: attach policy to user**************8
+
+#policy:1
+
+{
+  "Version": "2012-10-17",
+       	"Statement": [
+     {
+   		   "Effect": "Allow",
+   		   "Action": [
+               	"s3:ListBucket",
+               	"s3:GetObject"
+   		   ],
+   		   "Resource": [
+       	  	"arn:aws:s3:::uadmin-sourcebucket",
+       	  	"arn:aws:s3:::uadmin-sourcebucket/*"
+   		   ]
+     },
+     {
+   		   "Effect": "Allow",
+   		   "Action": [
+               	"s3:ListBucket",
+               	"s3:PutObject",
+               	"s3:PutObjectAcl"
+             	],
+   		     "Resource": [
+       	  	"arn:aws:s3:::uadmin-destinationbucket",
+       	  	"arn:aws:s3:::uadmin-destinationbucket/*"
+   		     ]
+       	}
+   	]
+   }
+
+
+#policy:2
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::src-bucket",
+                "arn:aws:s3:::src-bucket/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:*"
+            ],
+            "Resource": "arn:aws:kms:ap-south-1:992639931874:key/abde87ad-ecad-4447-bb23-f4caf5b366b5"
+        }
+    ]
+}
+
+
+
+
+**********************3 attach policy to source bucket**************8
+
+
+{
+   "Version": "2012-10-17",
+   "Statement": [
+     	{
+   		 "Sid": "AllowCopy",
+   		 "Effect": "Allow",
+   		 "Principal": {
+             	"AWS": "arn:aws:iam::01234567891:root"
+   		   },
+   		   "Action": [
+               	"s3:ListBucket",
+               	"s3:GetObject"
+   		   ],
+   		   "Resource": [
+               	"arn:aws:s3:::uadmin-sourcebucket/*",
+               	"arn:aws:s3:::uadmin-sourcebucket"
+   		   ]
+     	}
+   ]
+}
+
+
+*****************4: add policy in dest bucket bucket policy*****************
+	
+    {
+   "Version": "2012-10-17",
+   "Statement": [
+       {
+           "Sid": "DelegateS3Access",
+           "Effect": "Allow",
+           "Principal": {"AWS": "arn:aws:iam::<Destination-Account-ID>:root"},
+           "Action": ["s3:ListBucket","s3:GetObject"],
+           "Resource": [
+               "arn:aws:s3:::<Source-Bucket-Name>/*",
+               "arn:aws:s3:::<Source-Bucket-Name>"
+           ]
+       }
+   ]
+}
+
+
+

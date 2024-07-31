@@ -1,0 +1,26 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObjectAcl",
+                "s3:GetObject",
+                "s3:PutObjectVersionAcl",
+                "s3:GetObjectAttributes",
+                "s3:PutBucketAcl",
+                "s3:PutBucketPolicy",
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:GetBucketPolicy",
+                "s3:PutObjectAcl",
+                "s3:GetObjectAcl",
+                "s3:GetBucketAcl",
+                "s3:ListAllMyBuckets",
+                "s3:DeleteObject"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        }
+    ]
+}

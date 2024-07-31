@@ -1,0 +1,5 @@
+root - parth@aws
+pass- Kartikparth@12345
+
+user - parthraj
+Kartikparth@12345

@@ -1,0 +1,51 @@
+++++++++++++++++++++++++++++++++++++++++++doc-1 +++++++++++++++++++++++++++++++
+
+
+
+ps -ef | head -1;ps -ef | grep -i defunct| grep -v grep
+
+
+ps -ef | head -1;ps -aux | grep -i defunct| grep -v grep
+
+
+pstree -p pid
+
+
+kill -s SIGCHILD ppid
+
+
+kill -9 ppid 
+
+
+check (line 1 command)
+
+
+#final option reboot the system 
+
+
+
+
+
+
+++++++++++++++++++++++++++++ doc-2++++++++++++++++++++++++++++
+            
+                                                
+
+
+top -n1 -b1 |grep z 
+
+
+ps axo stat,ppid,pid,comm | grep -w defunct
+
+
+ps axo stat,ppid,pid,comm | grep -w defunct | awk '{print $2}'
+
+
+kill -9 $(ps axo stat,ppid,pid,comm | grep -w defunct | awk '{print $2}')
+
+
+for i in $(ps -A -ostat,ppid |grep -e '[zZ]' |awk '{print $2}');do kill -9 $i;done
+
+
+pstree -psn 
+

@@ -1,0 +1,802 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This Template is used to create 3 Public, 3 Private, 3 ELB Public, 3 ELB Private resources.
+
+# Metadata: 
+
+Parameters: 
+  EnviromentName:
+    Type: String
+    Default: Development
+    Description: Environment Name that will be used to name resources.
+  
+  vpcCIDR:
+    Type: String
+    Default: 10.60.0.0/16
+    Description: CIDR Block for the VPC.
+
+  publicSubnet1CIDR:
+    Type: String
+    Default: 10.60.1.0/24
+    Description: CIDR Block for the Public Subnet 1.
+
+  publicSubnet2CIDR:
+    Type: String
+    Default: 10.60.2.0/24
+    Description: CIDR Block for the Public Subnet 2.
+
+  publicSubnet3CIDR:
+    Type: String
+    Default: 10.60.3.0/24
+    Description: CIDR Block for the Public Subnet 3.
+
+  privateSubnet1CIDR:
+    Type: String
+    Default: 10.60.5.0/24
+    Description: CIDR Block for the Private Subnet 1.  
+
+  privateSubnet2CIDR:
+    Type: String
+    Default: 10.60.6.0/24
+    Description: CIDR Block for the Private Subnet 2.
+
+  privateSubnet3CIDR:
+    Type: String
+    Default: 10.60.7.0/24
+    Description: CIDR Block for the Private Subnet 3.
+
+  publicELBSubnet1CIDR:
+    Type: String
+    Default: 10.60.11.0/24  
+    Description: CIDR Block for the Public ELB Subnet 1.
+
+  publicELBSubnet2CIDR:
+    Type: String
+    Default: 10.60.12.0/24
+    Description: CIDR Block for the Public ELB Subnet 2.
+
+  publicELBSubnet3CIDR:
+    Type: String
+    Default: 10.60.13.0/24
+    Description: CIDR Block for the Public ELB Subnet 3.
+
+  privateELBSubnet1CIDR:
+    Type: String
+    Default: 10.60.15.0/24  
+    Description: CIDR Block for the Private ELB Subnet 1.
+
+  privateELBSubnet2CIDR:
+    Type: String  
+    Default: 10.60.16.0/24
+    Description: CIDR Block for the Private ELB Subnet 2.
+  
+  privateELBSubnet3CIDR:
+    Type: String
+    Default: 10.60.17.0/24
+    Description: CIDR Block for the Private ELB Subnet 3.
+
+  TGWid:
+    Type: String
+    Default: tgw-0726722bb1153d9d3
+    Description: Transit Gateway ID.
+
+
+  # sshallowdIPS:
+  #   Type: List
+  #   Default: [10.0.3.171, 10.0.3.172, 10.0.3.173]  
+  #   Description: IP Addresses for SSH Access.
+
+
+# Mappings: 
+
+
+
+# Conditions: 
+
+
+
+Resources: 
+################## VPC #######################
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref vpcCIDR
+      EnableDnsSupport: true
+      #EnabedDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnviromentName}-VPC
+###############################################
+
+################ Internet Gateway ################
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnviromentName}-InternetGateway
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+#####################################################
+
+
+################ Transitgateway-attachment Gateway ################
+  
+  TransitGatewayAttachment:
+    Type: AWS::EC2::TransitGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref PRIVSUB1
+        - !Ref PRIVSUB2
+        - !Ref PRIVSUB3
+      TransitGatewayId: !Ref TGWid
+      Options:
+        DnsSupport: enable
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnviromentName}-TransitGateway
+
+#####################################################
+
+################ Subnets ################
+  PUBSUB1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref publicSubnet1CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: PUBSUB-1A            
+
+  PUBSUB2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref publicSubnet2CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: PUBSUB-1B
+
+  PUBSUB3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref publicSubnet3CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: PUBSUB-1C
+
+  PRIVSUB1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref privateSubnet1CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PRIVSUB-1A
+
+  PRIVSUB2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref privateSubnet2CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PRIVSUB-1B
+
+  PRIVSUB3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref privateSubnet3CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: PRIVSUB-1C
+
+  PUBELBSUB1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref publicELBSubnet1CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: PUBELBSUB-1A
+
+  PUBELBSUB2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref publicELBSubnet2CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: PUBELBSUB-1B
+
+  PUBELBSUB3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref publicELBSubnet3CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: PUBELBSUB-1C
+
+  PRIVELBSUB1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref privateELBSubnet1CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: PRIVELBSUB-1A
+
+  PRIVELBSUB2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref privateELBSubnet2CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: PRIVELBSUB-1B
+
+  PRIVELBSUB3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref privateELBSubnet3CIDR
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: false
+      Tags:
+      - Key: Name
+        Value: PRIVELBSUB-1C
+#########################################################
+
+################## ROUTE TABLES #######################
+  PUBROUTETABLE:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnviromentName}-PUBROUTETABLE
+
+  PRIVROUTETABLE:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+      - Key: Name
+        Value: !Sub ${EnviromentName}-PRIVROUTETABLE
+#####################################################
+        
+# ####### PUBLIC ROUTE TABLE ASSOCIATION ###################
+
+  PUBSUBAS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PUBSUB1
+      RouteTableId: !Ref PUBROUTETABLE
+    
+
+  PUBSUBAS2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PUBSUB2
+      RouteTableId: !Ref PUBROUTETABLE
+    
+
+  PUBSUBAS3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PUBSUB3
+      RouteTableId: !Ref PUBROUTETABLE
+      
+
+  PUBELBAS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PUBELBSUB1
+      RouteTableId: !Ref PUBROUTETABLE
+      
+
+  PUBELBAS2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PUBELBSUB2
+      RouteTableId: !Ref PUBROUTETABLE
+      
+
+  PUBELBAS3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PUBELBSUB3
+      RouteTableId: !Ref PUBROUTETABLE
+    
+
+
+# ####################################################################
+
+# ####### PRIVATE ROUTE TABLE ASSOCIATION ###################
+
+  PRIBSUBAS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PRIVROUTETABLE
+      SubnetId: !Ref PRIVSUB1
+
+  PRIBSUBAS2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PRIVROUTETABLE
+      SubnetId: !Ref PRIVSUB2
+
+  PRIBSUBAS3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PRIVROUTETABLE
+      SubnetId: !Ref PRIVSUB3
+
+  PRIVELBAS1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PRIVROUTETABLE
+      SubnetId: !Ref PRIVELBSUB1
+
+  PRIVELBAS2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PRIVROUTETABLE
+      SubnetId: !Ref PRIVELBSUB2
+
+  PRIVELBAS3:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PRIVROUTETABLE
+      SubnetId: !Ref PRIVELBSUB3
+
+  S3GatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcEndpointType: Gateway
+      VpcId: !Ref VPC
+      ServiceName: com.amazonaws.ap-south-1.s3
+      RouteTableIds: 
+        - !Ref PRIVROUTETABLE
+        - !Ref PUBROUTETABLE
+      
+#################################################################################
+######################### Nginx Security Group #############################
+  NginxCommonSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: NginxCommonSG
+      GroupDescription: This Security Group for Nginx Server.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 10.60.11.0/24
+          Description: PUBELB1A
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 10.60.12.0/24
+          Description: PUBELB1B
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 10.60.13.0/24
+          Description: PUBELB1C
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.3.171/32
+          Description: PFSense
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+          Description: All
+      Tags:
+        - Key: Name
+          Value: NginxCommonSG
+  ##############################################################################
+  ######################### App Security Group #############################
+  # AppCommonSG:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupName: AppCommonSG 
+  #     GroupDescription: This Security Group for App Server.
+  #     VpcId: !Ref VPC
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: 0
+  #         ToPort: 65535
+  #         CidrIp: 10.60.4.0/24 
+  #         Description: All
+  #     SecurityGroupEgress:
+  #       - IpProtocol: tcp
+  #         FromPort: 0
+  #         ToPort: 65535
+  #         CidrIp: 0.0.0.0/0
+  #         Description: All
+  #     Tags:
+  #       - Key: Name
+  #         Value: AppCommonSG
+  ############################################################################
+  ############################ ELB Security Group ############################
+  ElbCommonSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: ElbCommonSG 
+      GroupDescription: This Security Group for ELB.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: ElbCommonSG
+  ############################################################################
+
+
+  ########################## Custom CMK ####################################
+  DEVCMKEC2:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: CMK for ${EnviromentName}-EC2
+      EnableKeyRotation: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnviromentName}-CMK
+  DEVCMKEC2Alias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${EnviromentName}-EC2
+      TargetKeyId: !Ref DEVCMKEC2
+
+  DEVCMKS3:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: CMK for ${EnviromentName}-S3
+      EnableKeyRotation: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnviromentName}-S3    
+
+  DEVCMKS3Alias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/${EnviromentName}-S3
+      TargetKeyId: !Ref DEVCMKS3
+
+  ##########################################################################
+  ##################### IAM ROLE EC2-S3-CW-SSM ############################
+  EC2S3CWSSM:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: EC2S3CWSSM
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal: 
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+        - !Sub arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - !Sub arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - !Sub arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnviromentName}-EC2S3CWSSM
+  
+  EC2S3CWSSMRole:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2S3CWSSM
+     
+
+  SQSPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: SQSPolicy
+      Roles:
+       - !Ref EC2S3CWSSM
+      # Users:
+      #  - user
+      # Groups:
+      #   - group
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - 'sqs:DeleteMessage'
+              - 'sqs:ListQueues'
+              - 'sqs:GetQueueUrl'
+              - 'sqs:ListDeadLetterSourceQueues'
+              - 'sqs:ListMessageMoveTasks'
+              - 'sqs:PurgeQueue'
+              - 'sqs:ReceiveMessage'
+              - 'sqs:SendMessage'
+              - 'sqs:GetQueueAttributes'
+              - 'sqs:ListQueueTags'  
+            Resource: '*'
+
+  S3CustomPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: S3CustomPolicy
+      Roles:
+        - !Ref EC2S3CWSSM
+      # Users:
+      #  - user
+      # Groups:
+      #   - group
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - 's3:PutObject'
+              - 's3:GetObjectAcl'
+              - 's3:GetObject'
+              - 's3:PutObjectVersionAcl'
+              - 's3:GetObjectAttributes'
+              - 's3:PutBucketAcl'
+              - 's3:PutBucketPolicy'
+              - 's3:ListBucket'
+              - 's3:GetBucketLocation'
+              - 's3:GetBucketPolicy'
+              - 's3:PutObjectAcl'
+              - 's3:GetObjectAcl'
+              - 's3:GetBucketAcl'
+            Resource: 
+              - 'arn:aws:s3:::dev-pnb/*'
+              - 'arn:aws:s3:::dev-kotak/*'
+              - 'arn:aws:s3:::dev-surrogate/*'
+              - 'arn:aws:s3:::sit-sidbi-data/*'
+              - 'arn:aws:s3:::uat-sidbi-data/*'
+              - 'arn:aws:s3:::qa-sidbi-data/*'
+              - 'arn:aws:s3:::dev-pnb'
+              - 'arn:aws:s3:::dev-kotak'
+              - 'arn:aws:s3:::dev-surrogate'
+              - 'arn:aws:s3:::sit-sidbi-data'
+              - 'arn:aws:s3:::uat-sidbi-data'
+              - 'arn:aws:s3:::qa-sidbi-data'
+              - 'arn:aws:s3:::sit-oam-plus-data'
+              - 'arn:aws:s3:::sit-oam-plus-data/*'
+              - 'arn:aws:s3:::simulator-uat'
+              - 'arn:aws:s3:::simulator-uat/*'
+              - 'arn:aws:s3:::sit-papq'
+              - 'arn:aws:s3:::sit-papq/*'
+              - 'arn:aws:s3:::sit-papqdata'
+              - 'arn:aws:s3:::sit-papqdata/*'
+              - 'arn:aws:s3:::gitalab-data-backup'
+              - 'arn:aws:s3:::gitalab-data-backup/*'
+
+  ###########################################################################
+
+Outputs:
+  VPC:
+    Description: The VPC ID.
+    Value: !Ref VPC
+    Export: 
+      Name: !Sub '${AWS::StackName}-VPC'
+  
+  PUBSUBEP1:
+    Description: The Public Subnet 1A.
+    Value: !Ref PUBSUB1
+    Export: 
+      Name: !Sub '${AWS::StackName}-PUBSUBEPA'
+
+  PUBSUBEP2:
+    Description: The Public Subnet 1B.
+    Value: !Ref PUBSUB2
+    Export: 
+      Name: !Sub '${AWS::StackName}-PUBSUBEPB'
+
+  PUBSUBEP3:
+    Description: The Public Subnet 1C.
+    Value: !Ref PUBSUB3
+    Export: 
+      Name: !Sub '${AWS::StackName}-PUBSUBEPC'
+
+  PRIVSUBEP1:
+    Description: The Private Subnet 1A.
+    Value: !Ref PRIVSUB1
+    Export: 
+      Name: !Sub '${AWS::StackName}-PRIVSUBEPA'
+
+  PRIVSUBEP2:
+    Description: The Private Subnet 1B.
+    Value: !Ref PRIVSUB2
+    Export: 
+      Name: !Sub '${AWS::StackName}-PRIVSUBEPB'
+
+  PRIVSUBEP3:
+    Description: The Private Subnet 1C.
+    Value: !Ref PRIVSUB3
+    Export: 
+      Name: !Sub '${AWS::StackName}-PRIVSUBEPC'
+  
+  PUBELBSUBEP1:
+    Description: The Public ELB Subnet 1A.
+    Value: !Ref PUBELBSUB1
+    Export: 
+      Name: !Sub '${AWS::StackName}-PUBELBSUBEPA'
+
+  PUBELBSUBEP2:
+    Description: The Public ELB Subnet 1B.
+    Value: !Ref PUBELBSUB2
+    Export: 
+      Name: !Sub '${AWS::StackName}-PUBELBSUBEPB'
+
+  PUBELBSUBEP3:
+    Description: The Public ELB Subnet 1C.
+    Value: !Ref PUBELBSUB3
+    Export: 
+      Name: !Sub '${AWS::StackName}-PUBELBSUBEPC'
+
+  PRIVELBSUBEP1:
+    Description: The Private ELB Subnet 1A.
+    Value: !Ref PRIVELBSUB1
+    Export: 
+      Name: !Sub '${AWS::StackName}-PRIVELBSUBEPA'
+
+  PRIVELBSUBEP2:
+    Description: The Private ELB Subnet 1B.
+    Value: !Ref PRIVELBSUB2
+    Export: 
+      Name: !Sub '${AWS::StackName}-PRIVELBSUBEPB'
+
+  PRIVELBSUBEP3:
+    Description: The Private ELB Subnet 1C.
+    Value: !Ref PRIVELBSUB3
+    Export: 
+      Name: !Sub '${AWS::StackName}-PRIVELBSUBEPC'
+
+  IGWEP:
+    Description: The Internet Gateway.
+    Value: !Ref InternetGateway
+    Export: 
+      Name: !Sub '${AWS::StackName}-IGWEP'
+
+  S3GTEP:
+    Description: The S3 Gateway Endpoint.
+    Value: !Ref S3GatewayEndpoint
+    Export: 
+      Name: !Sub '${AWS::StackName}-S3GTEP'
+
+  PUBRTEP:
+    Description: The Public Route Table.
+    Value: !Ref PUBROUTETABLE
+    Export: 
+      Name: !Sub '${AWS::StackName}-PUBRTEP'
+
+  PRIVRTEP:
+    Description: The Private Route Table.
+    Value: !Ref PRIVROUTETABLE
+    Export:
+      Name: !Sub '${AWS::StackName}-PRIVRTEP'
+
+  NginxCommonSGEP:
+    Description: The Security Group ID.
+    Value: !Ref NginxCommonSG
+    Export: 
+      Name: !Sub '${AWS::StackName}-NginxCommonSGEP'
+
+  # AppCommonSGEP:
+  #   Description: The Security Group ID.
+  #   Value: !Ref AppCommonSG
+  #   Export:
+  #     Name: !Sub '${AWS::StackName}-AppCommonSGEP'
+
+  ElbCommonSGEP:
+    Description: The Security Group ID.
+    Value: !Ref ElbCommonSG
+    Export:
+      Name: !Sub '${AWS::StackName}-ElbCommonSGEP'
+
+  CMKIDEC2EP:
+    Description: The CMK ID of EC2.
+    Value: !Ref DEVCMKEC2
+    Export:
+      Name: !Sub '${AWS::StackName}-CMKEC2EP'
+
+  CMKIDS3EP:
+    Description: The CMK ID of S3.
+    Value: !Ref DEVCMKS3
+    Export:
+      Name: !Sub '${AWS::StackName}-CMKS3EP'
+
+  CMKAliasEC2EP:
+    Description: The CMK Alias of EC2.
+    Value: !Ref DEVCMKEC2Alias
+    Export:
+      Name: !Sub '${AWS::StackName}-CMKEC2AliasEP'
+  
+  CMKAliasS3EP:
+    Description: The CMK Alias of S3.
+    Value: !Ref DEVCMKS3Alias
+    Export:
+      Name: !Sub '${AWS::StackName}-CMKS3AliasEP'
+
+  # EC2S3CWSSMEP:
+  #   Description: The EC2S3CWSSM Role.
+  #   Value: !Ref EC2S3CWSSM
+  #   Export:
+  #     Name: !Sub '${AWS::StackName}-EC2S3CWSSMEP'
+
+  SQSPolicyEP:
+    Description: The SQS Policy.
+    Value: !Ref SQSPolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-SQSPolicyEP' 
+
+  S3CustomPolicyEP:
+    Description: The S3 Custom Policy.
+    Value: !Ref S3CustomPolicy
+    Export:
+      Name: !Sub '${AWS::StackName}-S3CustomPolicyEP'   
+
+  EC2S3CWSSMRoleEP:
+    Description: The EC2S3CWSSM Role.
+    Value: !Ref EC2S3CWSSMRole
+    Export:
+      Name: !Sub '${AWS::StackName}-EC2S3CWSSMRoleEP'
+
+  EC2S3CWSSMRoleARNEP:
+    Description: The EC2S3CWSSMARN Role.
+    Value: !GetAtt EC2S3CWSSMRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}-EC2S3CWSSMRoleARNEP'
+
+  # QAOPLRDSSGEP:
+  #   Description: The Security Group ID.
+  #   Value: !Ref QAOPLRDSSG
+  #   Export:
+  #     Name: !Sub '${AWS::StackName}-QA-OPL-RDS-SG'
+
+
+
+

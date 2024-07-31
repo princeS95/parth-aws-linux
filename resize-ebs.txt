@@ -1,0 +1,7 @@
+                        ************resize-EBS************
+
+df -h
+lsblk
+growpart /dev/nvme0n1 4
+resize2fs /dev/xvda1 (resize that volume “xvda1” now )
+xfs_growfs -d /dev/nvme0n1
